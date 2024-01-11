@@ -1,3 +1,8 @@
+## RAMAS
+hay 3 ramas
+1-start que es el proyecto inicial, la dejo tal cual para notar los cambios
+2-progress es en la q trabajo y van a estar todos los commits
+main es el resultado final
 
 ## The Reactive Angular Course
 
