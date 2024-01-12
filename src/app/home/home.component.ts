@@ -5,54 +5,56 @@ import {catchError, delay, delayWhen, filter, finalize, map, retryWhen, shareRep
 import {HttpClient} from '@angular/common/http';
 import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
 import {CourseDialogComponent} from '../course-dialog/course-dialog.component';
+import { CoursesService } from '../services/courses.service';
+import { LoadingService } from '../services/loading.service';
+import { MessageService } from '../services/messages.service';
 
 
 @Component({
   selector: 'home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit {
 
-  beginnerCourses: Course[];
+  beginnerCourses$: Observable<Course[]>;
+  advancedCourses$: Observable<Course[]>;
 
-  advancedCourses: Course[];
-
-
-  constructor(private http: HttpClient, private dialog: MatDialog) {
-
+  constructor(private loadingService:LoadingService, private coursesService:CoursesService,private messageService:MessageService) {
+    
   }
 
   ngOnInit() {
-
-    this.http.get('/api/courses')
-      .subscribe(
-        res => {
-
-          const courses: Course[] = res["payload"].sort(sortCoursesBySeqNo);
-
-          this.beginnerCourses = courses.filter(course => course.category == "BEGINNER");
-
-          this.advancedCourses = courses.filter(course => course.category == "ADVANCED");
-
-        });
-
+    this.loadCourses();
   }
 
-  editCourse(course: Course) {
+  loadCourses(){
+    //   this.loadingService.setLoadingState(true);
+    const courses:Observable<Course[]> =  this.coursesService.getAllCourses()
+    .pipe( 
+      shareReplay(), //Importante utilizar el share Replay para poder hacer multiples subscriciones sin tener q hacer multiples llamados al backend
+      map( courses => courses.sort(sortCoursesBySeqNo)),
+      catchError(err => {
+        const message = "error desde el home " + err.message;
+        this. messageService.showErros([message]);
+        return throwError(err); //esto crea un nuevo observable q emite el error y se completa
+      })
 
-    const dialogConfig = new MatDialogConfig();
 
-    dialogConfig.disableClose = true;
-    dialogConfig.autoFocus = true;
-    dialogConfig.width = "400px";
+      //esta era la altenativa tradicional para mostrar el loading
+    /*   finalize(()=>{ //esto se ejecuta cuando se completa el observable
+          this.loadingService.setLoadingState(false);
+      }) */
+    );
 
-    dialogConfig.data = course;
+    //ahora en cambio para mostrar el loading lo hacemos atravez de un observable
+    const loadingCourses$ = this.loadingService.loadingUntilComplete(courses);
 
-    const dialogRef = this.dialog.open(CourseDialogComponent, dialogConfig);
-
+    this.beginnerCourses$ = loadingCourses$.pipe(map((courses => courses.filter(course =>course.category === "BEGINNER"))))
+    this.advancedCourses$ = loadingCourses$.pipe(map((courses => courses.filter(course =>course.category === "ADVANCED"))));
+   
+   
   }
-
 }
 
 
