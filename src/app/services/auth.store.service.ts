@@ -18,7 +18,10 @@ export class AuthStoreService {
 
     constructor(private http:HttpClient) {
         
-        this.isLoggedIn$ = this.user$.pipe(map(user => { console.log(!!user, user, !user); return !!user}));
+        this.isLoggedIn$ = this.user$.pipe(map(user => { 
+           // console.log(!!user, user, !user); 
+            return !!user
+        }));
 
         const user = localStorage.getItem(AUTH_USER);
         if(user)
