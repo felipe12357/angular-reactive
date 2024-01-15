@@ -1,8 +1,8 @@
-import { Component, EventEmitter, Input, Output } from "@angular/core";
+import { Component, Input } from "@angular/core";
 import { Course } from "../model/course";
 import { MatDialog, MatDialogConfig } from "@angular/material/dialog";
 import { CourseDialogComponent } from "../course-dialog/course-dialog.component";
-import { filter, take, tap } from "rxjs/operators";
+import { filter, take } from "rxjs/operators";
 
 
 @Component({
@@ -13,7 +13,6 @@ import { filter, take, tap } from "rxjs/operators";
 export class CourseCardComponent {
 
     @Input() course:Course;
-    @Output() courseUpdateEvent:EventEmitter<any> = new EventEmitter();
 
     constructor(private dialog: MatDialog){
         
@@ -36,8 +35,5 @@ export class CourseCardComponent {
            // tap((val)=>console.log(val))
             ).toPromise()
         
-        if(val)
-            this.courseUpdateEvent.emit(null)
-
       }
 }

@@ -3,10 +3,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 import {Course} from "../model/course";
 import {FormBuilder, Validators, FormGroup} from "@angular/forms";
 import * as moment from 'moment';
-import {catchError} from 'rxjs/operators';
-import {throwError} from 'rxjs';
-import { CoursesService } from '../services/courses.service';
 import { MessageService } from '../services/messages.service';
+import { CoursesStoreService } from '../services/courses.store.service';
 
 @Component({
     selector: 'course-dialog',
@@ -23,8 +21,7 @@ export class CourseDialogComponent implements AfterViewInit {
     constructor(
         private fb: FormBuilder,
         private dialogRef: MatDialogRef<CourseDialogComponent>,
-        private coursesService:CoursesService,
-        private messageService:MessageService,
+        private coursesStoreService:CoursesStoreService,
         @Inject(MAT_DIALOG_DATA) course:Course) {
 
         this.course = course;
@@ -44,17 +41,8 @@ export class CourseDialogComponent implements AfterViewInit {
 
     async save() {
       const changes = this.form.value;
-      const val = await this.coursesService.saveCourse(this.course.id,changes).pipe(
-        catchError(err =>{
-            const message = "error desde el dialog " + err.message;
-            this.messageService.showErros([message]);
-            return throwError(err)
-        })
-      ).toPromise();
-      //importante pasarle el val a close, con esto distingo si se cerro por medio de save o de la opcion close
-      //esto lo uso luego para actualizar la informacion
-      this.dialogRef.close(val);
-
+      this.dialogRef.close('saved');
+      await this.coursesStoreService.updateCourse(this.course.id,changes).toPromise();
     }
 
     close() {
